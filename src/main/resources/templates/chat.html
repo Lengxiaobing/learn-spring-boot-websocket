@@ -52,6 +52,9 @@
             </button>
         </div>
         <div class="message">
+
+            <input id="roomId" type="text" class="layui-input" size="40" style="width: 500px" placeholder="房间号"
+                   value="0"/>
             <input id="sender" type="text" class="layui-input" size="40" style="width: 500px" placeholder="发送者姓名"
                    value="admin"/>
             <input id="receiver" type="text" class="layui-input" size="40" style="width: 500px" placeholder="接收者姓名"
@@ -142,6 +145,7 @@
 
     //连接
     function connect() {
+        var roomId = $("#roomId").val();
         var target = $("#target").val();
         var ws = new SockJS(target);
         stompClient = Stomp.over(ws);
@@ -156,6 +160,11 @@
             //订阅服务端的 /topic/entire 地址
             stompClient.subscribe("/topic/entire", function (response) {
                 showGreeting("/topic/entire:" + response.body);
+            });
+
+            //订阅服务端的 /topic/entire 地址
+            stompClient.subscribe("/topic/entire/" + roomId, function (response) {
+                showGreeting("/topic/entire/{roomId}:" + response.body);
             });
 
             //订阅服务端的 /user/queue/single 地址

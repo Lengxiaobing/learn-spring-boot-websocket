@@ -2,6 +2,7 @@ package cn.cloud.websocket.controller;
 
 import cn.cloud.websocket.model.websocket.MessageTemplate;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Controller;
@@ -19,4 +20,13 @@ public class GreetingController {
         return msg;
     }
 
+    /**
+     * 广播模式-分组发送消息
+     */
+    @MessageMapping("/entire/{roomId}")
+    @SendTo("/topic/entire/{roomId}")
+    public MessageTemplate roomId(MessageTemplate msg, @DestinationVariable String roomId) {
+
+        return msg;
+    }
 }
