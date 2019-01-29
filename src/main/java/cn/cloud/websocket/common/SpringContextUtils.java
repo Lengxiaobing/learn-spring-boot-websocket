@@ -1,5 +1,6 @@
 package cn.cloud.websocket.common;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
@@ -20,6 +21,7 @@ import java.util.Map;
  *
  * @author zx
  */
+@Slf4j
 @Component
 public class SpringContextUtils implements ApplicationContextAware {
 
@@ -32,6 +34,8 @@ public class SpringContextUtils implements ApplicationContextAware {
 
     /**
      * 获取ApplicationContext对象
+     *
+     * @return
      */
     public static ApplicationContext getApplicationContext() {
         return applicationContext;
@@ -48,6 +52,9 @@ public class SpringContextUtils implements ApplicationContextAware {
 
     /**
      * 根据bean的名称获取bean
+     *
+     * @param name
+     * @return
      */
     public static Object getBeanByName(String name) {
         return applicationContext.getBean(name);
@@ -55,6 +62,10 @@ public class SpringContextUtils implements ApplicationContextAware {
 
     /**
      * 根据bean的class来查找对象
+     *
+     * @param clazz
+     * @param <T>
+     * @return
      */
     public static <T> T getBeanByClass(Class<T> clazz) {
         return applicationContext.getBean(clazz);
@@ -62,13 +73,19 @@ public class SpringContextUtils implements ApplicationContextAware {
 
     /**
      * 根据bean的class来查找所有的对象（包括子类）
+     *
+     * @param clazz
+     * @param <T>
+     * @return
      */
-    public static <T> Map<String, T> getBeansByClass(Class<T> c) {
-        return applicationContext.getBeansOfType(c);
+    public static <T> Map<String, T> getBeansByClass(Class<T> clazz) {
+        return applicationContext.getBeansOfType(clazz);
     }
 
     /**
      * 获取HttpServletRequest
+     *
+     * @return
      */
     public static HttpServletRequest getRequest() {
         ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();
@@ -77,6 +94,8 @@ public class SpringContextUtils implements ApplicationContextAware {
 
     /**
      * 获取HttpSession
+     *
+     * @return
      */
     public static HttpSession getSession() {
         ServletRequestAttributes attributes = (ServletRequestAttributes) RequestContextHolder.currentRequestAttributes();
@@ -85,6 +104,8 @@ public class SpringContextUtils implements ApplicationContextAware {
 
     /**
      * 获取完整的请求URL
+     *
+     * @return
      */
     public static String getRequestUrl() {
         return getRequestUrl(getRequest());
@@ -92,6 +113,9 @@ public class SpringContextUtils implements ApplicationContextAware {
 
     /**
      * 获取完整的请求URL
+     *
+     * @param request
+     * @return
      */
     public static String getRequestUrl(HttpServletRequest request) {
         //当前请求路径
@@ -106,7 +130,7 @@ public class SpringContextUtils implements ApplicationContextAware {
         try {
             result = URLEncoder.encode(currentUrl, "UTF-8");
         } catch (UnsupportedEncodingException e) {
-            //ignore
+            log.info("获取完整的请求URL错误：", e.getMessage());
         }
 
         return result;
@@ -114,6 +138,9 @@ public class SpringContextUtils implements ApplicationContextAware {
 
     /**
      * 获取请求的客户端IP
+     *
+     * @param request
+     * @return
      */
     public static String getRequestIp(HttpServletRequest request) {
         String ip = request.getHeader("X-Forwarded-For");

@@ -12,18 +12,14 @@ import org.apache.commons.lang3.StringUtils;
 public enum ChannelEnum {
 
     /**
-     * 系统消息通道
+     * 消息通道--广播模式
      */
-    CHANNEL_SYSTEM("system", "/topic/system"),
+    CHANNEL_ENTIRE("entire", "/topic/entire"),
     /**
-     * 翻页命令通道
+     * 消息通道--点对点模式
      */
-    CHANNEL_PAGE("page", "/topic/page"),
+    CHANNEL_SINGLE("single", "/queue/single");
 
-    /**
-     * 指针命令通道
-     */
-    CHANNEL_POINTER("pointer", "/topic/pointer");
 
     /**
      * 类型

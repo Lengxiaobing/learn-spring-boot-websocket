@@ -13,11 +13,10 @@ import org.springframework.web.socket.server.support.DefaultHandshakeHandler;
 
 import javax.servlet.http.HttpSession;
 import java.security.Principal;
-import java.text.MessageFormat;
 import java.util.Map;
 
 /**
- * 自定义{@link DefaultHandshakeHandler}，实现生成自定义的{@link Principal}
+ * 自定义握手处理程序，实现生成自定义的Principal
  *
  * @author zx
  * @date 2018/10/11
@@ -44,15 +43,15 @@ public class MyHandshakeHandler extends DefaultHandshakeHandler {
         User loginUser = (User) session.getAttribute(Constants.SESSION_USER);
 
         if (loginUser != null) {
-            log.debug(MessageFormat.format("WebSocket连接开始创建Principal，用户：{0}", loginUser.getUsername()));
+            log.info("WebSocket连接开始创建Principal，用户：{}", loginUser.getUsername());
             //1. 将用户名存到Redis中
             redisService.addToSet(Constants.REDIS_WEBSOCKET_USER_SET, loginUser.getUsername());
 
             //2. 返回自定义的Principal
             return new MyPrincipal(loginUser.getUsername());
         } else {
-            log.error("未登录系统，禁止连接WebSocket");
-            return null;
+            log.info("未登录系统，禁止连接WebSocket");
+            return request.getPrincipal();
         }
     }
 

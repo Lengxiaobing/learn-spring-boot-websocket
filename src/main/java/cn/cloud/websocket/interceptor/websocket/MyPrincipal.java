@@ -3,7 +3,7 @@ package cn.cloud.websocket.interceptor.websocket;
 import java.security.Principal;
 
 /**
- * 自定义{@link Principal}
+ * 自定义 Principal
  *
  * @author zx
  * @date 2018/10/11

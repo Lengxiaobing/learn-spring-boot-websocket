@@ -6,9 +6,8 @@ server:
 logging:
   level:
     #日志优先级（只会输出指定优先级及以上的日志信息）
-    org.springframework.web: debug
-    cn.cloud: debug
-#  file: logs/kafka-websocket.log
+    org.springframework.web: info
+    cn.cloud: info
 
 spring:
   #Druid

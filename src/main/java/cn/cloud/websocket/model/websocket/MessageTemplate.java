@@ -1,9 +1,6 @@
 package cn.cloud.websocket.model.websocket;
 
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import lombok.*;
 
 /**
  * 消息模板
@@ -14,9 +11,25 @@ import lombok.ToString;
  */
 @Data
 @NoArgsConstructor
+@AllArgsConstructor
 @ToString
 @Builder
 public class MessageTemplate {
+
+    /**
+     * 消息发送者
+     */
+    private String sender;
+
+    /**
+     * 消息接收者
+     */
+    private String receiver;
+
+    /**
+     * 人员标记
+     */
+    private String sign;
 
     /**
      * 消息类型
@@ -24,12 +37,24 @@ public class MessageTemplate {
     private String type;
 
     /**
+     * 目的地
+     */
+    private String destination;
+
+    /**
      * 消息主体
      */
-    private String data;
+    private String msg;
 
-    public MessageTemplate(String type, String data) {
+    public MessageTemplate(String type, String msg) {
         this.type = type;
-        this.data = data;
+        this.msg = msg;
     }
+
+    public MessageTemplate(String type, String destination, String msg) {
+        this.type = type;
+        this.destination = destination;
+        this.msg = msg;
+    }
+
 }

@@ -10,8 +10,6 @@ import org.springframework.messaging.simp.user.SimpUser;
 import org.springframework.messaging.simp.user.SimpUserRegistry;
 import org.springframework.stereotype.Component;
 
-import java.text.MessageFormat;
-
 /**
  * Redis中的WebSocket消息的处理者
  *
@@ -32,12 +30,12 @@ public class MessageReceiver {
      * 处理WebSocket消息
      */
     public void receiveMessage(RedisWebsocketMsg msg) {
-        log.info(MessageFormat.format("Received Message: {0}", msg));
+        log.info("Received Message: {}", msg);
 
         //1. 取出用户名并判断是否连接到当前应用节点的WebSocket
         SimpUser simpUser = userRegistry.getUser(msg.getReceiver());
 
-        if (StringUtils.isNotBlank(simpUser.getName())) {
+        if (simpUser != null && StringUtils.isNotBlank(simpUser.getName())) {
             //2. 获取WebSocket客户端的订阅地址
             ChannelEnum channelEnum = ChannelEnum.fromCode(msg.getChannelCode());
 
@@ -46,6 +44,5 @@ public class MessageReceiver {
                 messagingTemplate.convertAndSendToUser(msg.getReceiver(), channelEnum.getSubscribeUrl(), msg.getContent());
             }
         }
-
     }
 }

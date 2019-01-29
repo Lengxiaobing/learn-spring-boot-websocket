@@ -57,24 +57,27 @@
             <input id="receiver" type="text" class="layui-input" size="40" style="width: 500px" placeholder="接收者姓名"
                    value="test"/>
             <input id="destination" type="text" class="layui-input" size="40" style="width: 500px" placeholder="目的地"
-                   value="/topic/system"/>
-            <input id="message" type="text" class="layui-input" size="40" style="width: 500px" placeholder="消息内容"
-                   value="admin发送的消息"/>
+                   value="entire"/>
             <input id="type" type="text" class="layui-input" size="40" style="width: 500px" placeholder="类型"
                    value="system"/>
+            <input id="message" type="text" class="layui-input" size="40" style="width: 500px" placeholder="消息内容"
+                   value="admin发送的消息"/>
         </div>
         <div>
-            <button id="user" class="layui-btn layui-btn-normal layui-btn-disabled" disabled="disabled"
-                    onclick="sendUser();">SendUser
-            </button>
             <button id="topic" class="layui-btn layui-btn-normal layui-btn-disabled" disabled="disabled"
                     onclick="sendTopic();">sendTopic
             </button>
             <button id="app" class="layui-btn layui-btn-normal layui-btn-disabled" disabled="disabled"
                     onclick="sendApp();">sendApp
             </button>
+            <button id="sendToUser" class="layui-btn layui-btn-normal layui-btn-disabled" disabled="disabled"
+                    onclick="sendToUser();">sendToUser
+            </button>
         </div>
         <div class="row">
+            <button id="clear" class="layui-btn layui-btn-normal layui-btn-disabled" disabled="disabled"
+                    onclick="clearGreeting();">clear
+            </button>
             <div class="col-md-12">
                 <table id="conversation" class="table table-striped">
                     <thead>
@@ -104,76 +107,61 @@
     function setConnected(connected) {
         var connect = $("#connect");
         var disconnect = $("#disconnect");
-        var echo = $("#echo");
+        var user = $("#user");
+        var topic = $("#topic");
+        var app = $("#app");
+        var sendToUser = $("#sendToUser");
+        var clear = $("#clear");
 
         if (connected) {
             connect.addClass("layui-btn-disabled");
             disconnect.removeClass("layui-btn-disabled");
-            echo.removeClass("layui-btn-disabled");
+            user.removeClass("layui-btn-disabled");
+            topic.removeClass("layui-btn-disabled");
+            app.removeClass("layui-btn-disabled");
+            sendToUser.removeClass("layui-btn-disabled");
+            clear.removeClass("layui-btn-disabled");
         } else {
             connect.removeClass("layui-btn-disabled");
             disconnect.addClass("layui-btn-disabled");
-            echo.addClass("layui-btn-disabled");
+            user.addClass("layui-btn-disabled");
+            topic.addClass("layui-btn-disabled");
+            app.addClass("layui-btn-disabled");
+            sendToUser.addClass("layui-btn-disabled");
+            clear.addClass("layui-btn-disabled");
         }
 
         connect.attr("disabled", connected);
         disconnect.attr("disabled", !connected);
-        echo.attr("disabled", !connected);
+        user.attr("disabled", !connected);
+        topic.attr("disabled", !connected);
+        app.attr("disabled", !connected);
+        sendToUser.attr("disabled", !connected);
+        clear.attr("disabled", !connected);
     }
 
     //连接
     function connect() {
-        var userId = "admin"
-
         var target = $("#target").val();
-
         var ws = new SockJS(target);
         stompClient = Stomp.over(ws);
-
 
         stompClient.connect({}, function () {
             setConnected(true);
             log('Info: STOMP connection opened.');
 
             //连接成功后，主动拉取未读消息
-            pullUnreadMessage("/topic/reply");
+            pullUnreadMessage();
 
-            //订阅服务端的/topic/response地址
-            stompClient.subscribe("/topic/response", function (response) {
-                showGreeting("/topic/response:" + response.body);
+            //订阅服务端的 /topic/entire 地址
+            stompClient.subscribe("/topic/entire", function (response) {
+                showGreeting("/topic/entire:" + response.body);
             });
 
-            //订阅服务端的/topic/system地址
-            stompClient.subscribe("/topic/system", function (response) {
-                showGreeting("/topic/system:" + response.body);
+            //订阅服务端的 /user/queue/single 地址
+            stompClient.subscribe("/user/queue/single", function (response) {
+                showGreeting("/user/queue/single:" + response.body);
             });
-
-            //订阅服务端的/topic/system/{userId}地址
-            stompClient.subscribe("/topic/system/" + userId, function (response) {
-                showGreeting("/topic/system/{userId}:" + response.body);
-            });
-
-            //订阅服务端的/topic/page地址
-            stompClient.subscribe("/topic/page", function (response) {
-                showGreeting("/topic/page:" + response.body);
-            });
-
-            //订阅服务端的/topic/page/{userId}地址
-            stompClient.subscribe("/topic/page" + userId, function (response) {
-                showGreeting("/topic/page/{userId}:" + response.body);
-            });
-
-            //订阅服务端的/topic/pointer地址
-            stompClient.subscribe("/topic/pointer", function (response) {
-                showGreeting("/topic/pointer:" + response.body);
-            });
-
-            //订阅服务端的/topic/pointer/{userId}地址
-            stompClient.subscribe("/topic/pointer" + userId, function (response) {
-                showGreeting("/topic/pointer/{userId}:" + response.body);
-            });
-
-
         }, function () {
             //断开处理
             setConnected(false);
@@ -188,57 +176,96 @@
             stompClient = null;
         }
         setConnected(false);
+        clearGreeting()
         log('Info: STOMP connection closed.');
     }
 
-    function sendUser() {
-        var sender = $("#sender").val();
-        var receiver = $("#receiver").val();
-        var msg = $("#message").val();
-        var destination = $("#destination").val();
-        log('Sent: ' + JSON.stringify({'receiver': receiver, 'msg': msg}));
-
-        // 客户端消息发送的目的：服务端使用BroadcastCtl中@MessageMapping("/receive-single")注解的方法来处理发送过来的消息
-        stompClient.send(destination, {}, JSON.stringify({"sender": sender, "receiver": receiver, "msg": msg}));
-        showGreeting(msg);
-    }
-
+    //群发消息
     function sendApp() {
         var sender = $("#sender").val();
         var receiver = $("#receiver").val();
-        var msg = $("#message").val();
         var type = $("#type").val();
-        var destination = $("#destination").val();
-        log('Sent: ' + JSON.stringify({'receiver': receiver, 'msg': msg}));
+        var destination = "/app/" + $("#destination").val();
+        var msg = $("#message").val();
 
-        // 客户端消息发送的目的：服务端使用BroadcastCtl中@MessageMapping("/receive-single")注解的方法来处理发送过来的消息
-        stompClient.send(destination, {}, JSON.stringify({"type": type, "data": msg}));
-        showGreeting(msg);
+        stompClient.send(destination, {}, JSON.stringify({
+            "sender": sender,
+            "receiver": receiver,
+            "type": type,
+            "destination": destination,
+            "msg": msg
+        }));
     }
 
+    // 群发消息
     function sendTopic() {
         var sender = $("#sender").val();
         var receiver = $("#receiver").val();
-        var msg = $("#message").val();
         var type = $("#type").val();
-        var destination = $("#destination").val();
-        log('Sent: ' + JSON.stringify({'receiver': receiver, 'msg': msg}));
+        var destination = "/topic/" + $("#destination").val();
+        var msg = $("#message").val();
 
-        // 客户端消息发送的目的：服务端使用BroadcastCtl中@MessageMapping("/receive-single")注解的方法来处理发送过来的消息
-        stompClient.send(destination, {}, JSON.stringify({"type": type, "data": msg}));
-        showGreeting(msg);
+        stompClient.send(destination, {}, JSON.stringify({
+            "sender": sender,
+            "receiver": receiver,
+            "type": type,
+            "destination": destination,
+            "msg": msg
+        }));
+    }
+
+    //向指定用户发送消息
+    function sendToUser() {
+        if (stompClient != null) {
+            var sender = $("#sender").val();
+            var receiver = $("#receiver").val();
+            var type = $("#type").val();
+            var destination = "/queue/" + $("#destination").val();
+            var msg = $("#message").val();
+
+            $.ajax({
+                url: "/message/sendToUser",
+                type: "POST",
+                dataType: "json",
+                contentType: "application/json",
+                async: true,
+                data: JSON.stringify({
+                    "sender": sender,
+                    "receiver": receiver,
+                    "type": type,
+                    "destination": destination,
+                    "msg": msg
+                }),
+                success: function (data) {
+                    if (data.result != null) {
+                        $.each(data.result, function (i, item) {
+                            log(JSON.parse(item).content);
+                            showGreeting(JSON.parse(item).content);
+                        })
+                    } else if (data.code != null && data.code == "500") {
+                        layer.msg(data.msg, {
+                            offset: 'auto'
+                            , icon: 2
+                        });
+                    }
+                }
+            });
+        } else {
+            layer.msg('STOMP connection not established, please connect.', {
+                offset: 'auto'
+                , icon: 2
+            });
+        }
     }
 
     //从服务器拉取未读消息
-    function pullUnreadMessage(destination) {
+    function pullUnreadMessage() {
         $.ajax({
             url: "/message/pullUnreadMessage",
             type: "POST",
             dataType: "json",
+            contentType: "application/json",
             async: true,
-            data: {
-                "destination": destination
-            },
             success: function (data) {
                 if (data.result != null) {
                     $.each(data.result, function (i, item) {
@@ -258,6 +285,11 @@
     // 显示
     function showGreeting(message) {
         $("#greetings").append("<tr><td>" + message + "</td></tr>");
+    }
+
+    // 清空
+    function clearGreeting() {
+        $("#greetings").html('');
     }
 
     //日志输出

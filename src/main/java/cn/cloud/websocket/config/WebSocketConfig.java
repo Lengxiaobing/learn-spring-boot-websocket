@@ -60,7 +60,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void configureMessageBroker(MessageBrokerRegistry registry) {
 
         //定义了一个客户端订阅地址的前缀信息，也就是客户端接收服务端发送消息的前缀信息
-        registry.enableSimpleBroker("/topic");
+        registry.enableSimpleBroker("/topic", "/queue");
 
         //定义了服务端接收地址的前缀，也即客户端给服务端发消息的地址前缀，将直接路由到，带有@MessageMapping注解的控制器方法
         registry.setApplicationDestinationPrefixes("/app");

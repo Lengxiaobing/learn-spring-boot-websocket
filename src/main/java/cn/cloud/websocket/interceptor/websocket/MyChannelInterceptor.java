@@ -13,10 +13,9 @@ import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.stereotype.Component;
 
 import java.security.Principal;
-import java.text.MessageFormat;
 
 /**
- * 自定义{@link ChannelInterceptor}，实现断开连接的处理
+ * 自定义通道拦截器，实现断开连接的处理
  *
  * @author zx
  * @date 2018/10/10
@@ -48,13 +47,12 @@ public class MyChannelInterceptor implements ChannelInterceptor {
             Principal principal = accessor.getUser();
             if (principal != null && StringUtils.isNotBlank(principal.getName())) {
                 user = principal.getName();
-
                 //从Redis中移除用户
                 redisService.removeFromSet(Constants.REDIS_WEBSOCKET_USER_SET, user);
             } else {
                 user = accessor.getSessionId();
             }
-            log.debug(MessageFormat.format("用户{0}的WebSocket连接已经断开", user));
+            log.info("用户{}的WebSocket连接已经断开", user);
         }
     }
 
