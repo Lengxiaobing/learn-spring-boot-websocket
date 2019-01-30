@@ -12,8 +12,6 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.stereotype.Component;
 
-import java.security.Principal;
-
 /**
  * 自定义通道拦截器，实现断开连接的处理
  *
@@ -24,9 +22,11 @@ import java.security.Principal;
 @Slf4j
 @Component
 public class MyChannelInterceptor implements ChannelInterceptor {
-
     @Autowired
     private RedisService redisService;
+
+//    @Autowired
+//    private SimpMessagingTemplate messagingTemplate;
 
     /**
      * 信息发送完成事件
@@ -44,11 +44,26 @@ public class MyChannelInterceptor implements ChannelInterceptor {
         //用户断开连接
         if (StompCommand.DISCONNECT.equals(command)) {
             String user;
-            Principal principal = accessor.getUser();
+            MyPrincipal principal = (MyPrincipal) accessor.getUser();
             if (principal != null && StringUtils.isNotBlank(principal.getName())) {
                 user = principal.getName();
+                String roomNum = principal.getRoomNum();
                 //从Redis中移除用户
-                redisService.removeFromSet(Constants.REDIS_WEBSOCKET_USER_SET, user);
+                redisService.removeFromHash(Constants.REDIS_WEBSOCKET_USER_SET + roomNum, user);
+
+//                //发送下线人员消息
+//                Map<Object, Object> map = redisService.hashEntries(Constants.REDIS_WEBSOCKET_USER_SET + roomNum);
+//                MessageTemplate template = MessageTemplate.builder()
+//                        .sender("system")
+//                        .receiver("all")
+//                        .roomNum(roomNum)
+//                        .sign("offline")
+//                        .type("system")
+//                        .destination(ChannelEnum.CHANNEL_ENTIRE.getSubscribeUrl())
+//                        .msg(map)
+//                        .build();
+//                messagingTemplate.convertAndSend(ChannelEnum.CHANNEL_ENTIRE.getSubscribeUrl() + "/" + roomNum, JsonUtils.toJson(template));
+
             } else {
                 user = accessor.getSessionId();
             }

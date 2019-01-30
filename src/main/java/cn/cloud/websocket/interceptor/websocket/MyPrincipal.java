@@ -11,13 +11,25 @@ import java.security.Principal;
  */
 public class MyPrincipal implements Principal {
     private String loginName;
+    private String roomNum;
+    private String type;
 
-    public MyPrincipal(String loginName) {
+    public MyPrincipal(String loginName, String roomNum, String type) {
         this.loginName = loginName;
+        this.roomNum = roomNum;
+        this.type = type;
     }
 
     @Override
     public String getName() {
         return loginName;
+    }
+
+    public String getRoomNum() {
+        return roomNum;
+    }
+
+    public String getType() {
+        return type;
     }
 }

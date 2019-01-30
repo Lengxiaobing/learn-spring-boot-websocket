@@ -1,8 +1,6 @@
 package cn.cloud.websocket.interceptor;
 
 import cn.cloud.websocket.common.Constants;
-import cn.cloud.websocket.common.SpringContextUtils;
-import cn.cloud.websocket.model.User;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 import javax.servlet.http.HttpServletRequest;
@@ -26,13 +24,13 @@ public class LoginInterceptor implements HandlerInterceptor {
         HttpSession session = request.getSession();
 
         //获取session中存储的token
-        User user = (User) session.getAttribute(Constants.SESSION_USER);
+        Object user = session.getAttribute(Constants.WEBSOCKET_USER);
 
         if (user != null) {
             return true;
         } else {
             //如果token不存在，则跳转到登录页面
-            response.sendRedirect(request.getContextPath() + "/login?redirectUri=" + SpringContextUtils.getRequestUrl(request));
+            response.sendRedirect(request.getContextPath() + "/login");
             return false;
         }
     }

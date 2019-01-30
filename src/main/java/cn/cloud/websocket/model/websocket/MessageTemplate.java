@@ -27,7 +27,12 @@ public class MessageTemplate {
     private String receiver;
 
     /**
-     * 人员标记
+     * 房间号
+     */
+    private String roomNum;
+
+    /**
+     * 标记
      */
     private String sign;
 
@@ -44,14 +49,14 @@ public class MessageTemplate {
     /**
      * 消息主体
      */
-    private String msg;
+    private Object msg;
 
-    public MessageTemplate(String type, String msg) {
+    public MessageTemplate(String type, Object msg) {
         this.type = type;
         this.msg = msg;
     }
 
-    public MessageTemplate(String type, String destination, String msg) {
+    public MessageTemplate(String type, String destination, Object msg) {
         this.type = type;
         this.destination = destination;
         this.msg = msg;

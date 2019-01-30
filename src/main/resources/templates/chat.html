@@ -147,6 +147,7 @@
     function connect() {
         var roomId = $("#roomId").val();
         var target = $("#target").val();
+
         var ws = new SockJS(target);
         stompClient = Stomp.over(ws);
 
@@ -167,6 +168,13 @@
                 showGreeting("/topic/entire/{roomId}:" + response.body);
             });
 
+            //订阅服务端的 /topic/online 地址
+            stompClient.subscribe("/topic/online/" + roomId, function (response) {
+                showGreeting("/topic/online/{roomId}:" + response.body);
+            });
+
+            stompClient.send("/app/online/" + roomId);
+
             //订阅服务端的 /user/queue/single 地址
             stompClient.subscribe("/user/queue/single", function (response) {
                 showGreeting("/user/queue/single:" + response.body);
@@ -186,6 +194,8 @@
         }
         setConnected(false);
         clearGreeting()
+        sendApp();
+
         log('Info: STOMP connection closed.');
     }
 

@@ -7,6 +7,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -63,18 +64,22 @@ public class RedisServiceImpl implements RedisService {
     }
 
     @Override
-    public void addToSet(String setKey, String... values) {
-        redisTemplate.opsForSet().add(setKey, values);
+    public void addToHash(String key, String hashKey, String value) {
+        redisTemplate.opsForHash().put(key, hashKey, value);
     }
 
     @Override
-    public Boolean isSetMember(String setKey, Object value) {
-        return redisTemplate.opsForSet().isMember(setKey, value);
+    public Boolean isHasKey(String key, Object hashKeys) {
+        return redisTemplate.opsForHash().hasKey(key, hashKeys);
+    }
+    @Override
+    public Map<Object, Object> hashEntries(String key){
+        return redisTemplate.opsForHash().entries(key);
     }
 
     @Override
-    public void removeFromSet(String setKey, Object... values) {
-        redisTemplate.opsForSet().remove(setKey, values);
+    public void removeFromHash(String hashKey, Object... hashKeys) {
+        redisTemplate.opsForHash().delete(hashKey, hashKeys);
     }
 
     @Override

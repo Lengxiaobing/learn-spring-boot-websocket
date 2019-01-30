@@ -68,9 +68,8 @@ public class UserController {
         if (StringUtils.isNotBlank(redirectUrl)) {
             HttpSession session = request.getSession();
             //将回调地址添加到session中
-            session.setAttribute(Constants.SESSION_LOGIN_REDIRECT_URL, redirectUrl);
+            session.setAttribute(Constants.LOGIN_REDIRECT_URL, redirectUrl);
         }
-
         return new ModelAndView("login");
     }
 
@@ -96,31 +95,24 @@ public class UserController {
             //1. 登录验证
             Map<String, Object> checkMap = userService.checkLogin(username, password);
             Boolean loginResult = (Boolean) checkMap.get("result");
-            User correctUser = (User) checkMap.get("user");
 
             //登录验证通过
             if (loginResult != null && loginResult) {
                 //2. session中添加用户信息
                 HttpSession session = request.getSession();
-                session.setAttribute(Constants.SESSION_USER, correctUser);
+                session.setAttribute(Constants.WEBSOCKET_USER, username);
 
                 //3. 返回给页面的数据
                 result.put("code", 200);
                 //登录成功之后的回调地址
-                String redirectUrl = (String) session.getAttribute(Constants.SESSION_LOGIN_REDIRECT_URL);
-                session.removeAttribute(Constants.SESSION_LOGIN_REDIRECT_URL);
+                String redirectUrl = (String) session.getAttribute(Constants.LOGIN_REDIRECT_URL);
+                session.removeAttribute(Constants.LOGIN_REDIRECT_URL);
 
                 if (StringUtils.isNotBlank(redirectUrl)) {
                     result.put("redirect_uri", redirectUrl);
                 }
             } else {
-                if (correctUser.getStatus() == 0) {
-                    result.put("msg", "该用户还未开通！");
-                } else if (correctUser.getStatus() == 3) {
-                    result.put("msg", "该用户已被管理员禁用！");
-                } else {
-                    result.put("msg", "用户名或密码错误！");
-                }
+                result.put("msg", "用户名或密码错误！");
             }
         } else {
             result.put("msg", "请求参数不能为空！");
@@ -140,11 +132,9 @@ public class UserController {
     @RequestMapping("/logout")
     public ModelAndView logout(HttpServletRequest request) {
         HttpSession session = request.getSession();
-        session.removeAttribute(Constants.SESSION_USER);
-
+        session.removeAttribute(Constants.WEBSOCKET_USER);
         return new ModelAndView("redirect:/login");
     }
-
 
     /**
      * 聊天界面
@@ -155,6 +145,5 @@ public class UserController {
     public String chat() {
         return "chat";
     }
-
 
 }

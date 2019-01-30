@@ -9,14 +9,24 @@ package cn.cloud.websocket.common;
  */
 public class Constants {
     /**
-     * 用户信息在session中存储的变量名
+     * websocket的用户名
      */
-    public static final String SESSION_USER = "SESSION_USER";
+    public static final String WEBSOCKET_USER = "user";
+
+    /**
+     * websocket的房间号
+     */
+    public static final String WEBSOCKET_ROOM = "roomNum";
+
+    /**
+     * websocket的控制类型
+     */
+    public static final String WEBSOCKET_SIGN = "sign";
 
     /**
      * 登录页面的回调地址，在session中存储的变量名
      */
-    public static final String SESSION_LOGIN_REDIRECT_URL = "LOGIN_REDIRECT_URL";
+    public static final String LOGIN_REDIRECT_URL = "LOGIN_REDIRECT_URL";
 
     /**
      * 用户未读的WebSocket消息，在Redis中存储的变量名的前缀
@@ -26,5 +36,5 @@ public class Constants {
     /**
      * 建立连接的WebSocket用户，在Redis中存储的SET名称
      */
-    public static final String REDIS_WEBSOCKET_USER_SET = "WEBSOCKET_USER_SET";
+    public static final String REDIS_WEBSOCKET_USER_SET = "WEBSOCKET_USER_SET:";
 }

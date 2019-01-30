@@ -1,17 +1,15 @@
 package cn.cloud.websocket.interceptor.websocket;
 
 import cn.cloud.websocket.common.Constants;
-import cn.cloud.websocket.common.SpringContextUtils;
-import cn.cloud.websocket.model.User;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
+import org.springframework.http.server.ServletServerHttpRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.server.HandshakeInterceptor;
 
-import javax.servlet.http.HttpSession;
 import java.util.Map;
 
 /**
@@ -26,7 +24,7 @@ import java.util.Map;
 public class AuthHandshakeInterceptor implements HandshakeInterceptor {
 
     /**
-     * 在调用handler前执行。用来注册用户信息，绑定WebSocketSession，在 handler 里根据用户信息获取WebSocketSession发送消息
+     * 在握手之前。用来注册用户信息，绑定WebSocketSession，在 handler 里根据用户信息获取WebSocketSession发送消息
      *
      * @param request
      * @param response
@@ -37,20 +35,30 @@ public class AuthHandshakeInterceptor implements HandshakeInterceptor {
      */
     @Override
     public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler handler, Map<String, Object> map) {
-        HttpSession session = SpringContextUtils.getSession();
-        User loginUser = (User) session.getAttribute(Constants.SESSION_USER);
+        if (request instanceof ServletServerHttpRequest) {
+            ServletServerHttpRequest servletRequest = (ServletServerHttpRequest) request;
+            String loginUser = servletRequest.getServletRequest().getParameter(Constants.WEBSOCKET_USER);
 
-        if (loginUser == null || StringUtils.isBlank(loginUser.getUsername())) {
-            log.info("用户未登录系统，禁止连接WebSocket");
-            return false;
-        } else {
-            log.info("用户{}请求建立WebSocket连接", loginUser.getUsername());
-            return true;
+            if (StringUtils.isBlank(loginUser)) {
+                log.info("用户未登录系统，禁止连接WebSocket");
+                return false;
+            } else {
+                log.info("用户{}请求建立WebSocket连接", loginUser);
+                return true;
+            }
         }
+        return true;
     }
 
+    /**
+     * 握手成功后
+     *
+     * @param request
+     * @param response
+     * @param handler
+     * @param e
+     */
     @Override
     public void afterHandshake(ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler handler, Exception e) {
     }
-
 }

@@ -1,12 +1,10 @@
 package cn.cloud.websocket.controller;
 
 import cn.cloud.websocket.common.Constants;
-import cn.cloud.websocket.common.SpringContextUtils;
 import cn.cloud.websocket.enums.ExpireEnum;
-import cn.cloud.websocket.model.User;
 import cn.cloud.websocket.model.websocket.MessageTemplate;
 import cn.cloud.websocket.model.websocket.RedisWebsocketMsg;
-import cn.cloud.websocket.service.impl.RedisServiceImpl;
+import cn.cloud.websocket.service.RedisService;
 import cn.cloud.websocket.utils.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -21,7 +19,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import javax.servlet.http.HttpSession;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,7 +41,7 @@ public class MessageController {
     @Autowired
     private SimpUserRegistry userRegistry;
     @Autowired
-    private RedisServiceImpl redisService;
+    private RedisService redisService;
 
     /**
      * 根据登录人员，拉取未读的WebSocket消息
@@ -53,15 +50,11 @@ public class MessageController {
      */
     @PostMapping("/pullUnreadMessage")
     @ResponseBody
-    public Map<String, Object> pullUnreadMessage() {
+    public Map<String, Object> pullUnreadMessage(String username) {
         Map<String, Object> result = new HashMap<>();
         try {
-            HttpSession session = SpringContextUtils.getSession();
-            //当前登录用户
-            User loginUser = (User) session.getAttribute(Constants.SESSION_USER);
-
             //存储消息的Redis列表名
-            String listKey = Constants.REDIS_UNREAD_MSG_PREFIX + loginUser.getUsername();
+            String listKey = Constants.REDIS_UNREAD_MSG_PREFIX + username;
             //从Redis中拉取所有未读消息
             List<String> messageList = redisService.rangeList(listKey, 0, -1);
 
@@ -93,6 +86,18 @@ public class MessageController {
     }
 
     /**
+     * 根据房间号查询所有人员
+     *
+     * @param room
+     * @return
+     */
+    @PostMapping("/findUser")
+    @ResponseBody
+    public Map findUser(String room) {
+        return redisService.hashEntries(room);
+    }
+
+    /**
      * 给指定用户发送消息
      *
      * @param msg
@@ -101,7 +106,7 @@ public class MessageController {
     @PostMapping("/sendToUser")
     @ResponseBody
     public String sendToSingle(@RequestBody MessageTemplate msg) {
-        sendToUser(msg.getSender(), msg.getReceiver(), msg.getDestination(), JsonUtils.toJson(msg));
+        sendToUser(msg.getSender(), msg.getReceiver(), msg.getRoomNum(), msg.getDestination(), JsonUtils.toJson(msg));
         return "success";
     }
 
@@ -110,10 +115,11 @@ public class MessageController {
      *
      * @param sender      消息发送者
      * @param receiver    消息接收者
+     * @param room        房间号
      * @param destination 目的地
      * @param payload     消息正文
      */
-    public void sendToUser(String sender, String receiver, String destination, String payload) {
+    public void sendToUser(String sender, String receiver, String room, String destination, String payload) {
         SimpUser simpUser = userRegistry.getUser(receiver);
 
         //如果接收者在线，并在本节点，则发送消息
@@ -122,7 +128,7 @@ public class MessageController {
         }
 
         //如果接收者在线，在集群的其他节点，需要通知接收者连接的那个节点发送消息
-        else if (redisService.isSetMember(Constants.REDIS_WEBSOCKET_USER_SET, receiver)) {
+        else if (redisService.isHasKey(Constants.REDIS_WEBSOCKET_USER_SET + room, receiver)) {
             RedisWebsocketMsg<String> redisWebsocketMsg = new RedisWebsocketMsg<>(receiver, destination, payload);
             redisService.convertAndSend(topicName, JsonUtils.toJson(redisWebsocketMsg));
         }
