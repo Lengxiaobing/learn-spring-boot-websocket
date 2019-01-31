@@ -32,4 +32,16 @@ public class MyPrincipal implements Principal {
     public String getType() {
         return type;
     }
+
+    public void setLoginName(String loginName) {
+        this.loginName = loginName;
+    }
+
+    public void setRoomNum(String roomNum) {
+        this.roomNum = roomNum;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
 }

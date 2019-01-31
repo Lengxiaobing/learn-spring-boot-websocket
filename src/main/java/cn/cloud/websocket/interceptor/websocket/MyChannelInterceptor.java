@@ -1,7 +1,11 @@
 package cn.cloud.websocket.interceptor.websocket;
 
 import cn.cloud.websocket.common.Constants;
+import cn.cloud.websocket.enums.ChannelEnum;
+import cn.cloud.websocket.model.websocket.MessageTemplate;
 import cn.cloud.websocket.service.RedisService;
+import cn.cloud.websocket.utils.JsonUtils;
+import cn.cloud.websocket.utils.WebSocketUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +15,8 @@ import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.stereotype.Component;
+
+import java.util.Map;
 
 /**
  * 自定义通道拦截器，实现断开连接的处理
@@ -24,9 +30,6 @@ import org.springframework.stereotype.Component;
 public class MyChannelInterceptor implements ChannelInterceptor {
     @Autowired
     private RedisService redisService;
-
-//    @Autowired
-//    private SimpMessagingTemplate messagingTemplate;
 
     /**
      * 信息发送完成事件
@@ -51,19 +54,19 @@ public class MyChannelInterceptor implements ChannelInterceptor {
                 //从Redis中移除用户
                 redisService.removeFromHash(Constants.REDIS_WEBSOCKET_USER_SET + roomNum, user);
 
-//                //发送下线人员消息
-//                Map<Object, Object> map = redisService.hashEntries(Constants.REDIS_WEBSOCKET_USER_SET + roomNum);
-//                MessageTemplate template = MessageTemplate.builder()
-//                        .sender("system")
-//                        .receiver("all")
-//                        .roomNum(roomNum)
-//                        .sign("offline")
-//                        .type("system")
-//                        .destination(ChannelEnum.CHANNEL_ENTIRE.getSubscribeUrl())
-//                        .msg(map)
-//                        .build();
-//                messagingTemplate.convertAndSend(ChannelEnum.CHANNEL_ENTIRE.getSubscribeUrl() + "/" + roomNum, JsonUtils.toJson(template));
+                //发送下线人员消息
+                Map<Object, Object> map = redisService.hashEntries(Constants.REDIS_WEBSOCKET_USER_SET + roomNum);
+                MessageTemplate template = MessageTemplate.builder()
+                        .sender("system")
+                        .receiver("all")
+                        .roomNum(roomNum)
+                        .sign("offline")
+                        .type("system")
+                        .destination(ChannelEnum.CHANNEL_ENTIRE.getSubscribeUrl())
+                        .msg(map)
+                        .build();
 
+                WebSocketUtil.sendToAll(ChannelEnum.CHANNEL_ENTIRE.getSubscribeUrl() + "/" + roomNum, JsonUtils.toJson(template));
             } else {
                 user = accessor.getSessionId();
             }

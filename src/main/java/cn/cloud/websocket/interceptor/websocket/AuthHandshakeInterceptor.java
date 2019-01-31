@@ -1,8 +1,10 @@
 package cn.cloud.websocket.interceptor.websocket;
 
 import cn.cloud.websocket.common.Constants;
+import cn.cloud.websocket.service.RedisService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.http.server.ServletServerHttpRequest;
@@ -22,6 +24,9 @@ import java.util.Map;
 @Slf4j
 @Component
 public class AuthHandshakeInterceptor implements HandshakeInterceptor {
+
+    @Autowired
+    private RedisService redisService;
 
     /**
      * 在握手之前。用来注册用户信息，绑定WebSocketSession，在 handler 里根据用户信息获取WebSocketSession发送消息
@@ -51,7 +56,7 @@ public class AuthHandshakeInterceptor implements HandshakeInterceptor {
     }
 
     /**
-     * 握手成功后
+     * 握手成功后，发送上线人员信息
      *
      * @param request
      * @param response

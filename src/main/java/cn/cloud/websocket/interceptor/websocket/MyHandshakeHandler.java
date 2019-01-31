@@ -3,6 +3,7 @@ package cn.cloud.websocket.interceptor.websocket;
 import cn.cloud.websocket.common.Constants;
 import cn.cloud.websocket.service.RedisService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServletServerHttpRequest;
@@ -37,28 +38,28 @@ public class MyHandshakeHandler extends DefaultHandshakeHandler {
      */
     @Override
     protected Principal determineUser(ServerHttpRequest request, WebSocketHandler wsHandler, Map<String, Object> attributes) {
-        String room = null;
+        String roomNum = null;
         String loginUser = null;
         String sign = null;
         if (request instanceof ServletServerHttpRequest) {
             ServletServerHttpRequest servletRequest = (ServletServerHttpRequest) request;
             loginUser = servletRequest.getServletRequest().getParameter(Constants.WEBSOCKET_USER);
-            room = servletRequest.getServletRequest().getParameter(Constants.WEBSOCKET_ROOM);
+            roomNum = servletRequest.getServletRequest().getParameter(Constants.WEBSOCKET_ROOM);
             sign = servletRequest.getServletRequest().getParameter(Constants.WEBSOCKET_SIGN);
 
-            if (loginUser != null) {
+            if (StringUtils.isNotBlank(loginUser)) {
                 log.info("WebSocket连接开始创建Principal，用户：{}", loginUser);
                 //1. 将用户名存到Redis中
-                redisService.addToHash(Constants.REDIS_WEBSOCKET_USER_SET + room, loginUser, sign);
+                redisService.addToHash(Constants.REDIS_WEBSOCKET_USER_SET + roomNum, loginUser, sign);
 
                 //2. 返回自定义的Principal
-                return new MyPrincipal(loginUser, room, sign);
+                return new MyPrincipal(loginUser, roomNum, sign);
             } else {
                 log.info("未登录系统，禁止连接WebSocket");
-                return new MyPrincipal(null, room, sign);
+                return new MyPrincipal(null, roomNum, sign);
             }
         }
-        return new MyPrincipal(loginUser, room, sign);
+        return new MyPrincipal(loginUser, roomNum, sign);
     }
 
 }

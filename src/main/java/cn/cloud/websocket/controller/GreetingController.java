@@ -42,7 +42,7 @@ public class GreetingController {
      * 广播模式-获取在线人员
      */
     @MessageMapping("/online/{roomNum}")
-    @SendTo("/topic/online/{roomNum}")
+    @SendTo("/topic/entire/{roomNum}")
     public MessageTemplate onlinePersonnel(@DestinationVariable String roomNum) {
         Map<Object, Object> map = redisService.hashEntries(Constants.REDIS_WEBSOCKET_USER_SET + roomNum);
         MessageTemplate template = MessageTemplate.builder()

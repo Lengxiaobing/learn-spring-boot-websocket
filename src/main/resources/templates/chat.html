@@ -147,43 +147,42 @@
     function connect() {
         var roomId = $("#roomId").val();
         var target = $("#target").val();
+        var sender = $("#sender").val();
 
         var ws = new SockJS(target);
         stompClient = Stomp.over(ws);
 
-        stompClient.connect({}, function () {
-            setConnected(true);
-            log('Info: STOMP connection opened.');
+        stompClient.connect({},
+            function () {
+                setConnected(true);
+                log('Info: STOMP connection opened.');
 
-            //连接成功后，主动拉取未读消息
-            pullUnreadMessage();
+                //连接成功后，主动拉取未读消息
+                pullUnreadMessage(sender);
 
-            //订阅服务端的 /topic/entire 地址
-            stompClient.subscribe("/topic/entire", function (response) {
-                showGreeting("/topic/entire:" + response.body);
+                //订阅服务端的 /topic/entire 地址，用于全局广播通信
+                stompClient.subscribe("/topic/entire", function (response) {
+                    showGreeting("/topic/entire:" + response.body);
+                });
+
+                //订阅服务端的 /topic/entire 地址，用于当前房间发布通信
+                stompClient.subscribe("/topic/entire/" + roomId, function (response) {
+                    showGreeting("/topic/entire/{roomId}:" + response.body);
+                });
+
+                //订阅服务端的 /user/queue/single 地址，用于点对点通信
+                stompClient.subscribe("/user/queue/single", function (response) {
+                    showGreeting("/user/queue/single:" + response.body);
+                });
+
+                //调用/app/online，用于获取当前房间在线人员信息
+                stompClient.send("/app/online/" + roomId);
+            },
+            function () {
+                //断开处理
+                setConnected(false);
+                log('Info: STOMP connection closed.');
             });
-
-            //订阅服务端的 /topic/entire 地址
-            stompClient.subscribe("/topic/entire/" + roomId, function (response) {
-                showGreeting("/topic/entire/{roomId}:" + response.body);
-            });
-
-            //订阅服务端的 /topic/online 地址
-            stompClient.subscribe("/topic/online/" + roomId, function (response) {
-                showGreeting("/topic/online/{roomId}:" + response.body);
-            });
-
-            stompClient.send("/app/online/" + roomId);
-
-            //订阅服务端的 /user/queue/single 地址
-            stompClient.subscribe("/user/queue/single", function (response) {
-                showGreeting("/user/queue/single:" + response.body);
-            });
-        }, function () {
-            //断开处理
-            setConnected(false);
-            log('Info: STOMP connection closed.');
-        });
     }
 
     //断开连接
@@ -199,7 +198,7 @@
         log('Info: STOMP connection closed.');
     }
 
-    //群发消息
+    //群发消息-app方式
     function sendApp() {
         var sender = $("#sender").val();
         var receiver = $("#receiver").val();
@@ -216,7 +215,7 @@
         }));
     }
 
-    // 群发消息
+    // 群发消息-topic方式
     function sendTopic() {
         var sender = $("#sender").val();
         var receiver = $("#receiver").val();
@@ -278,13 +277,14 @@
     }
 
     //从服务器拉取未读消息
-    function pullUnreadMessage() {
+    function pullUnreadMessage(sender) {
         $.ajax({
             url: "/message/pullUnreadMessage",
             type: "POST",
             dataType: "json",
             contentType: "application/json",
             async: true,
+            data: {"sender": sender},
             success: function (data) {
                 if (data.result != null) {
                     $.each(data.result, function (i, item) {
