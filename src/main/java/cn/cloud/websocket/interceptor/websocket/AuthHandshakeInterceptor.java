@@ -25,9 +25,6 @@ import java.util.Map;
 @Component
 public class AuthHandshakeInterceptor implements HandshakeInterceptor {
 
-    @Autowired
-    private RedisService redisService;
-
     /**
      * 在握手之前。用来注册用户信息，绑定WebSocketSession，在 handler 里根据用户信息获取WebSocketSession发送消息
      *

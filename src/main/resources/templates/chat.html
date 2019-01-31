@@ -43,7 +43,7 @@
     <div id="connect-container" class="layui-elem-field">
         <legend>Chat With STOMP Message</legend>
         <div>
-            <input id="target" type="text" class="layui-input" size="40" style="width: 500px" value="/point"/>
+            <input id="target" type="text" class="layui-input" size="40" style="width: 500px" value="/point?user=admin&roomNum=0&sign=god"/>
         </div>
         <div>
             <button id="connect" class="layui-btn layui-btn-normal" onclick="connect();">Connect</button>
@@ -193,8 +193,6 @@
         }
         setConnected(false);
         clearGreeting()
-        sendApp();
-
         log('Info: STOMP connection closed.');
     }
 

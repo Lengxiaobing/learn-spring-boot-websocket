@@ -51,22 +51,25 @@ public class MyChannelInterceptor implements ChannelInterceptor {
             if (principal != null && StringUtils.isNotBlank(principal.getName())) {
                 user = principal.getName();
                 String roomNum = principal.getRoomNum();
-                //从Redis中移除用户
-                redisService.removeFromHash(Constants.REDIS_WEBSOCKET_USER_SET + roomNum, user);
+                //判断redis中是否存在该用户
+                Boolean hasKey = redisService.isHasKey(Constants.REDIS_WEBSOCKET_USER_SET + roomNum, user);
+                if (hasKey) {
+                    //从Redis中移除用户
+                    redisService.removeFromHash(Constants.REDIS_WEBSOCKET_USER_SET + roomNum, user);
 
-                //发送下线人员消息
-                Map<Object, Object> map = redisService.hashEntries(Constants.REDIS_WEBSOCKET_USER_SET + roomNum);
-                MessageTemplate template = MessageTemplate.builder()
-                        .sender("system")
-                        .receiver("all")
-                        .roomNum(roomNum)
-                        .sign("offline")
-                        .type("system")
-                        .destination(ChannelEnum.CHANNEL_ENTIRE.getSubscribeUrl())
-                        .msg(map)
-                        .build();
-
-                WebSocketUtil.sendToAll(ChannelEnum.CHANNEL_ENTIRE.getSubscribeUrl() + "/" + roomNum, JsonUtils.toJson(template));
+                    //发送下线人员消息
+                    Map<Object, Object> map = redisService.hashEntries(Constants.REDIS_WEBSOCKET_USER_SET + roomNum);
+                    MessageTemplate template = MessageTemplate.builder()
+                            .sender("system")
+                            .receiver("all")
+                            .roomNum(roomNum)
+                            .sign("offline")
+                            .type("system")
+                            .destination(ChannelEnum.CHANNEL_ENTIRE.getSubscribeUrl())
+                            .msg(map)
+                            .build();
+                    WebSocketUtil.sendToAll(ChannelEnum.CHANNEL_ENTIRE.getSubscribeUrl() + "/" + roomNum, JsonUtils.toJson(template));
+                }
             } else {
                 user = accessor.getSessionId();
             }
