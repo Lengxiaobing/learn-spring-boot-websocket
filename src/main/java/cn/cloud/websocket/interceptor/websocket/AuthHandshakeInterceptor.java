@@ -1,10 +1,8 @@
 package cn.cloud.websocket.interceptor.websocket;
 
 import cn.cloud.websocket.common.Constants;
-import cn.cloud.websocket.service.RedisService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.http.server.ServletServerHttpRequest;
